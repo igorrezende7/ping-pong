@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Pong</title>
+    <link rel="stylesheet" href="./style.css"/>
+</head>
+<body>
+
+    <canvas  id="canvas"></canvas>
+
+
+
+
+
+
+
+<script>
+    const canvas = document.getElementById('canvas'),
+    canvasCtx = canvas.getContext('2d')
+    const lineWidth = 15
+    const branco = "#ffffff"
+    const gapX = 10
+    const mouse = {x:0, y:0}
+
+    const field = {
+        width:window.innerWidth,
+        height:window.innerHeight,
+        draw:function(){
+            //campo
+            canvasCtx.fillStyle = "#286047"
+            canvasCtx.fillRect(0,0, window.innerWidth, window.innerHeight)
+        }
+        }
+    
+        const line = {
+            width:15,
+            height:field.height,
+            draw: function(){
+                canvasCtx.fillStyle = branco
+                canvasCtx.fillRect(field.width/2 - this.width/2, 0, line.width, this.height)
+            }
+        }
+
+        const leftPaddle = {
+            x:gapX,
+            y:200,
+            w:line.width,
+            height:200,
+            _move:function(){
+                this.y = mouse.y - this.height/2
+            },
+            draw: function(){
+                canvasCtx.fillStyle = branco
+                canvasCtx.fillRect(this.x, this.y, this.w, this.height)
+                this._move()
+            }
+
+        }
+
+        const rightPaddle = {
+            x:field.width - line.width - gapX,
+            y:10,
+            w:line.width,
+            height:200,
+            speed:5,
+            _move:function(){
+                if(this.y + this.height  < ball.y + ball.r){
+                    this.y += this.speed
+                }else{
+                    this.y -=this.speed
+                }
+            },
+            _speedUp:function(){
+                this.speed += 2
+            },
+            draw: function(){
+                canvasCtx.fillStyle = branco
+                canvasCtx.fillRect(this.x, this.y, this.w, this.height)
+                this._move()
+            }
+
+        }
+
+        const score = {
+            human:0,
+            computer:0,
+            _increaseHuman:function(){
+                this.human ++
+            },
+            _increaseComputer:function(){
+                this.computer ++
+            },
+            draw:function(){
+                //desenhando placar esquerdo
+                canvasCtx.font = 'bold 72px Arial'
+                canvasCtx.textAling = 'center'
+                canvasCtx.textBaseline = 'top'
+                canvasCtx.fillStyle = "#01341D"
+                canvasCtx.fillText(this.human, window.innerWidth/4,50)
+
+                //desenhando placar direito
+                canvasCtx.font = 'bold 72px Arial'
+                canvasCtx.textAling = 'center'
+                canvasCtx.textBaseline = 'top'
+                canvasCtx.fillStyle = "#01341D"
+                canvasCtx.fillText(this.computer, window.innerWidth/4 + window.innerWidth/2 ,50)
+            }
+
+        }
+
+
+
+        const ball = {
+            x: field.width/2,
+            y:field.height/2,
+            r:20,
+            speed:7,
+            directionX:1,
+            directionY:1,
+            _calcPosition:function(){
+
+                //verifica posição para pontuação do jogador 1
+                if(this.x > field.width - this.r - rightPaddle.w - gapX){
+                    //verifico se a raquete direita esta na posição y da bola
+                    if(this.y + this.r > rightPaddle.y &&
+                     this.y - this.r < rightPaddle.y + rightPaddle.height ){
+                        this._reverseX()
+                    }
+                    else{
+                      score._increaseHuman()
+                      this._PointUp()
+                    }
+                }
+
+
+                //verifica posição para inverter a direção Y
+                if(
+                    (this.y - this.r < 0 && this.directionY <0) ||
+                    (this.y > field.height - this.r && this.directionY > 0)
+                ){
+                    this._reverseY()
+                }
+
+                //verificar ponto do jogador 2
+                if(this.x < this.r + leftPaddle.w + gapX){
+                    //verifica se a raquete esquerda esta na posição y da bola
+                    if(this.y + this.r > leftPaddle.y && this.y - this.r < leftPaddle.y + leftPaddle.height){
+                        this._reverseX()
+                    }
+                    else{
+                        score._increaseComputer()
+                        this._PointUp()
+                    }
+                }
+              
+               
+            },
+            _speedUp:function(){
+                if(this.speed < 30){
+                    this.speed +=2
+                }else{
+                    this.speed = this.speed
+                }
+            },
+            _PointUp:function(){
+                this.x = field.width/2
+                this.y= field.height/2
+                this._speedUp()
+                ball._speedUp()
+            },
+            _reverseY:function(){
+                this.directionY *= -1
+            },
+            _reverseX:function(){
+                this.directionX *= -1
+            },
+            _move:function(){
+                this.x += this.directionX * this.speed
+                this.y += this.directionY * this.speed
+            },
+            
+            draw: function(){
+                canvasCtx.fillStyle = branco
+                canvasCtx.beginPath()
+                canvasCtx.arc(this.x,this.y, this.r, 0 ,2*Math.PI, false)
+                canvasCtx.fill()
+                this._move()
+                this._calcPosition()
+            }
+        }
+
+        
+
+
+
+    function setup(){
+        //definindo largura da janela canvas
+        canvas.width = canvasCtx.width = field.width
+
+        //definindo altura da janela canvas
+        canvas.height = canvasCtx.height = field.height
+
+
+
+
+    }
+
+
+    //função para desenhar
+    function draw(){
+
+        //campo
+        field.draw()
+
+        //linha do meio de campo
+        line.draw()
+
+        //raquetes lado esquerdo
+        leftPaddle.draw()
+
+        //raquetes lado direito
+        rightPaddle.draw()
+
+        //bola
+        ball.draw()
+
+        //desenhando placar
+        score.draw()
+     
+    }
+   
+
+    window.animateFrame = (function(){
+        return (
+            window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            function(callback){
+                return window.setTimeout(callback, 1000/60)
+            }
+        )
+    })()
+
+    function main(){
+        animateFrame(main)
+        draw()
+    }
+    setup()
+    main()
+
+    canvas.addEventListener('mousemove', function(e){
+        mouse.x = e.pageX
+        mouse.y = e.pageY
+    })
+ 
+</script>
+    
+</body>
+</html>
